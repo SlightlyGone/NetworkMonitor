@@ -52,27 +52,6 @@ def _format_mbps(bits_per_second: float) -> float:
     return round(bits_per_second / (1000 ** 2), 2)
 
 
-def _parse_timestamp(timestamp_value) -> datetime:
-    """Convert a timestamp from ``speedtest`` results to ``datetime``.
-
-    The ``speedtest`` library returns timestamps as ISO 8601 strings (e.g.,
-    ``"2024-06-30T12:34:56.789Z"``). Older or alternative implementations may
-    return UNIX epoch numbers. This helper normalizes both cases.
-    """
-
-    if isinstance(timestamp_value, (int, float)):
-        return datetime.fromtimestamp(timestamp_value)
-
-    if isinstance(timestamp_value, str):
-        cleaned = timestamp_value.replace("Z", "+00:00")
-        try:
-            return datetime.fromisoformat(cleaned)
-        except ValueError:
-            pass
-
-    raise TypeError("Unexpected timestamp value from speedtest results")
-
-
 def run_speed_test(share: bool = False, secure: bool = True, timeout: int = 10) -> SpeedTestResult:
     """Execute a speed test and return structured results."""
 
@@ -95,7 +74,7 @@ def run_speed_test(share: bool = False, secure: bool = True, timeout: int = 10) 
         download_mbps=_format_mbps(download_bps),
         upload_mbps=_format_mbps(upload_bps),
         ping_ms=results.ping,
-        timestamp=_parse_timestamp(results.timestamp),
+        timestamp=datetime.fromtimestamp(results.timestamp),
         server_name=server_name,
         sponsor=server.get("sponsor", "Unknown"),
         share_url=share_url,
